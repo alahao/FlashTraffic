@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 //Write the protocol declaration here:
 protocol SetAddressDelegate {
@@ -26,16 +27,22 @@ class SetAddressViewController: UIViewController {
     //This is the IBAction that gets called when the user taps on the "Get gMap" button:
     @IBAction func setAddressPressed(_ sender: AnyObject) {
         
+        if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
         
+        let mapCoreData = LocationCoreData(entity: LocationCoreData.entity(), insertInto: context)
+            
+       
         
         let originTextInput = SetOriginAddressTextField.text!
         let destinationTextInput = SetDestinationTextField.text!
-        
+            mapCoreData.origins = originTextInput
+            mapCoreData.destinations = destinationTextInput
         delegate?.userEnteredNewAddress(originAddress: originTextInput, destinationAddress: destinationTextInput)
-        
-        
+        print("setAddress is \(mapCoreData.origins)")
+        try? context.save()
+            
         self.dismiss(animated: true, completion: nil)
-        
+        }
     }
     
     //This is the IBAction that gets called when the user taps the back button.

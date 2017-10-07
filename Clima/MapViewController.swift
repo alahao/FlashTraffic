@@ -22,18 +22,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
     var localParams : [String: String] = [:]
 
     //TODO: Declare instance variables here
+    var coreDataModel : [MapDataModel] = []
     var mapDataModel = MapDataModel()
-    
-    func saveData() {
-        
-    if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
-        
-        let mapDataModel = LocationCoreData(entity: LocationCoreData.entity(), insertInto: context)
-        try? context.save()
-    }
-        
-    }
-    
     
     //Pre-linked IBOutlets
     @IBOutlet weak var highwayDurationLabel: UILabel!
@@ -41,14 +31,24 @@ class MapViewController: UIViewController, SetAddressDelegate {
     @IBAction func refreshPressed(_ sender: Any) {
         localDurationLabel.text = "Loading..."
         highwayDurationLabel.text = "Loading..."
-        getMapData(url: GOOGLEMAP_API_URL, highwayParameters: highwayParams, localParameters: localParams)
-    }
-    func applicationDidBecomeActive(_ application: UIApplication) {
+        fetchCoreData()
+//        getMapData(url: GOOGLEMAP_API_URL, highwayParameters: highwayParams, localParameters: localParams)
+    
+                //  if let coreDataModel = mapCoreData {
+                //    print("coreData is \(coreDataModel)")
+            }
+    
         
+
+    
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        fetchCoreData()
     }
    
     override func viewDidLoad() {
         super.viewDidLoad()
+        fetchCoreData()
+        print("reload mapCoreData.origins is \(coreDataModel.last?.origins)")
     }
     
     
@@ -90,19 +90,31 @@ class MapViewController: UIViewController, SetAddressDelegate {
         
     }
    
-    
+    func fetchCoreData() {
+        if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
+            
+            if let mapCoreData = try? context.fetch(LocationCoreData.fetchRequest()) as? [LocationCoreData] {
+                print ("mapCoreData is\(mapCoreData)")
+                if let coreDataModel = mapCoreData {
+                    mapDataModel.origins = (coreDataModel.last?.origins)!
+                    mapDataModel.destinations = (coreDataModel.last?.destinations)!
+                    print("coreData is \(coreDataModel.last?.origins)")
+                }
+            }
+        }
+        userEnteredNewAddress(originAddress: mapDataModel.origins, destinationAddress: mapDataModel.destinations)
+    }
     //MARK: - JSON Parsing
     /***************************************************************/
     //Write the updateWeatherData method here:
     func updateHighwayMapData(highwayJSON : JSON) {
-        
         if let highwayDurationResult = highwayJSON["rows"][0]["elements"][0]["duration_in_traffic"]["text"].string {
     
         mapDataModel.highwayDuration = highwayDurationResult
         mapDataModel.origins = highwayJSON["origin_addresses"].stringValue
         mapDataModel.destinations = highwayJSON["destination_addresses"].stringValue
         print("durationResult is \(highwayDurationResult)")
-        saveData()
+        
         updateUIWithMapData()
         
         }
