@@ -13,8 +13,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
     // Constants
     let GOOGLEMAP_API_URL = "https://maps.googleapis.com/maps/api/distancematrix/json"
     let APP_KEY = "AIzaSyD7v5q-NhVfrPKU1GcIGnTjuW1ghsLcEGo"
-    var originDurationText = "Loading..."
-    var destinationDurationText = "Loading..."
+    var originDurationText = "Location Empty"
+    var destinationDurationText = "Location Empty"
     var highwayParams : [String: String] = [:] //Dictionary
     var localParams : [String: String] = [:]   //Dictionary
 
@@ -113,6 +113,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapDataModel.highwayDuration = highwayDurationResult
                 print("Alert 8: HighwayDurationResult is \(highwayDurationResult)")
             } else { highwayDurationLabel.text = "Data Unavailable" }
+            updateUIWithMapData()
         }
         
         // 9 - 10. Translate JSON to LOCAL duration.
@@ -133,11 +134,10 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapCoreData.destinations = mapDataModel.destinations
                 mapCoreData.lastUpdate = Date()
                 
-                
                 try? context.save()
                 print("Alert 11B: Last saved date is \(String(describing: mapCoreData.lastUpdate)), saved origin is \(String(describing: mapCoreData.origins))")
-                updateUIWithMapData()
             }
+            updateUIWithMapData()
         }
         
         
@@ -148,10 +148,15 @@ class MapViewController: UIViewController, SetAddressDelegate {
     func fetchCoreData() {
         if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
             if let mapCoreData = try? context.fetch(LocationCoreData.fetchRequest()) as? [LocationCoreData] {
+                if mapCoreData?.last?.origins != nil {
                 mapDataModel.origins = (mapCoreData?.last?.origins)!
                 mapDataModel.destinations = (mapCoreData?.last?.destinations)!
                 mapDataModel.lastUpdateTimeData = (mapCoreData?.last?.lastUpdate)!
                 print("Alert 12: coreData Fetched, last update is \(mapDataModel.lastUpdateTimeData), origin is \(mapDataModel.origins)")
+                } else {
+                    highwayDurationLabel.text = "Location Empty"
+                    localDurationLabel.text = "Location Empty"
+                }
             }
         }
         userEnteredNewAddress(originAddress: mapDataModel.origins, destinationAddress: mapDataModel.destinations)
@@ -165,8 +170,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
         
         // initialize the date formatter and set the style
         let formatter = DateFormatter()
-        formatter.timeStyle = .medium
-        formatter.dateStyle = .long
+        formatter.timeStyle = .short
+        formatter.dateStyle = .short
         
         // get the date time String from the date object
         mapDataModel.lastUpdateTimeFormatted = formatter.string(from: mapDataModel.lastUpdateTimeData) // October 8, 2016 at 10:48:53 PM
