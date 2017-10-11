@@ -3,10 +3,11 @@
     <entity name="LocationCoreData" representedClassName="LocationCoreData" syncable="YES" codeGenerationType="class">
         <attribute name="destinations" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="highwayDuration" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="lastUpdate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="localDuration" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="origins" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <elements>
-        <element name="LocationCoreData" positionX="-63" positionY="-18" width="128" height="105"/>
+        <element name="LocationCoreData" positionX="-63" positionY="-18" width="128" height="120"/>
     </elements>
 </model>

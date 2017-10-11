@@ -15,5 +15,7 @@ class MapDataModel {
     var highwayDuration = ""
     var origins = ""
     var destinations = ""
-   
+    var lastUpdateTimeData = Date()
+    var lastUpdateTimeFormatted = ""
+    
 }
