@@ -11,8 +11,9 @@ import CoreData
 
 class MapViewController: UIViewController, SetAddressDelegate {
     // Constants
-    let GOOGLEMAP_API_URL = "https://maps.googleapis.com/maps/api/distancematrix/json"
-    let APP_KEY = "AIzaSyD7v5q-NhVfrPKU1GcIGnTjuW1ghsLcEGo"
+    let GOOGLEMAP_API_URL = "https://maps.googleapis.com/maps/api/directions/json"
+//Google map API.... let APP_KEY = "AIzaSyD7v5q-NhVfrPKU1GcIGnTjuW1ghsLcEGo"
+    let APP_KEY = "AIzaSyDeW72YFPFM9l9FI8amIEqRlr2XdOktm-M" //Google Direction API
     var originDurationText = "Location Empty"
     var destinationDurationText = "Location Empty"
     var highwayParams : [String: String] = [:] //Dictionary
@@ -58,8 +59,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
 /***************************************************************/
     // Locations from page 2
     func userEnteredNewAddress(originAddress: String, destinationAddress: String) {
-        highwayParams = ["origins" : originAddress, "destinations" : destinationAddress, "departure_time" : "now", "key" : APP_KEY]
-        localParams = ["origins" : originAddress, "destinations" : destinationAddress, "departure_time" : "now", "avoid" : "highways", "key" : APP_KEY]
+        highwayParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "key" : APP_KEY]
+        localParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "avoid" : "highways", "key" : APP_KEY]
         originDurationText = originAddress
         destinationDurationText = destinationAddress
         getMapData(url: GOOGLEMAP_API_URL, highwayParameters: highwayParams, localParameters: localParams)
