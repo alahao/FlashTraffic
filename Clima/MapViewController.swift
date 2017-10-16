@@ -12,13 +12,11 @@ import CoreData
 class MapViewController: UIViewController, SetAddressDelegate {
     // Constants
     let GOOGLEMAP_API_URL = "https://maps.googleapis.com/maps/api/directions/json"
-//Google map API.... let APP_KEY = "AIzaSyD7v5q-NhVfrPKU1GcIGnTjuW1ghsLcEGo"
-    let APP_KEY = "AIzaSyDeW72YFPFM9l9FI8amIEqRlr2XdOktm-M" //Google Direction API
-    var originDurationText = "Location Empty"
-    var destinationDurationText = "Location Empty"
+    let APP_KEY = "AIzaSyDeW72YFPFM9l9FI8amIEqRlr2XdOktm-M"
     var highwayParams : [String: String] = [:] //Dictionary
     var localParams : [String: String] = [:]   //Dictionary
 
+    
     // Data Model and Core Data Model
     var coreDataModel : [MapDataModel] = []  //Created an empty coreDataModel object (Dictionary) using MapDataModel class
     var mapDataModel = MapDataModel() //Created mapDataModel object using MapDataModel class
@@ -29,6 +27,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
     @IBOutlet weak var lastUpdateLabel: UILabel!
     @IBOutlet weak var highwayDurationLabel: UILabel!
     @IBOutlet weak var localDurationLabel: UILabel!
+    @IBOutlet weak var viaHwyLabel: UILabel!
+    @IBOutlet weak var viaLocalLabel: UILabel!
     
     
 // MARK: - Refresh Method
@@ -58,11 +58,13 @@ class MapViewController: UIViewController, SetAddressDelegate {
 // MARK: - Change City Delegate methods
 /***************************************************************/
     // Locations from page 2
-    func userEnteredNewAddress(originAddress: String, destinationAddress: String) {
+    func userEnteredNewAddress(originAddress: String, originName: String, destinationAddress: String, destinationName: String) {
         highwayParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "key" : APP_KEY]
         localParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "avoid" : "highways", "key" : APP_KEY]
-        originDurationText = originAddress
-        destinationDurationText = destinationAddress
+        mapDataModel.originName = originName
+        mapDataModel.destinationName = destinationName
+        
+        
         getMapData(url: GOOGLEMAP_API_URL, highwayParameters: highwayParams, localParameters: localParams)
     }
 
@@ -110,8 +112,9 @@ class MapViewController: UIViewController, SetAddressDelegate {
 /***************************************************************/
         // 8. Translate JSON to HIGHWAY duration.
         func updateHighwayMapData(highwayJSON : JSON) {
-            if let highwayDurationResult = highwayJSON["rows"][0]["elements"][0]["duration_in_traffic"]["text"].string {
+            if let highwayDurationResult = highwayJSON["routes"][0]["legs"][0]["duration_in_traffic"]["text"].string {
                 mapDataModel.highwayDuration = highwayDurationResult
+                mapDataModel.highwayVia = highwayJSON["routes"][0]["summary"].stringValue
                 print("Alert 8: HighwayDurationResult is \(highwayDurationResult)")
             } else { highwayDurationLabel.text = "Data Unavailable" }
             updateUIWithMapData()
@@ -119,10 +122,11 @@ class MapViewController: UIViewController, SetAddressDelegate {
         
         // 9 - 10. Translate JSON to LOCAL duration.
         func updateLocalMapData(localJSON : JSON) {
-            if let localDurationResult = localJSON["rows"][0]["elements"][0]["duration_in_traffic"]["text"].string {
+            if let localDurationResult = localJSON["routes"][0]["legs"][0]["duration_in_traffic"]["text"].string {
                 mapDataModel.localDuration = localDurationResult
-                mapDataModel.origins = localJSON["origin_addresses"][0].stringValue
-                mapDataModel.destinations = localJSON["destination_addresses"][0].stringValue
+                mapDataModel.origins = localJSON["routes"][0]["legs"][0]["start_address"].stringValue
+                mapDataModel.destinations = localJSON["routes"][0]["legs"][0]["end_address"].stringValue
+                mapDataModel.localVia = localJSON["routes"][0]["summary"].stringValue
                 print("Alert 9: mapDataModel.origins is \(mapDataModel.origins)")
                 print("Alert 10: LocalDurationResult is \(localDurationResult)")
             } else { localDurationLabel.text = "Data Unavailable" }
@@ -134,9 +138,12 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapCoreData.origins = mapDataModel.origins
                 mapCoreData.destinations = mapDataModel.destinations
                 mapCoreData.lastUpdate = Date()
+                mapCoreData.originName = mapDataModel.originName
+                mapCoreData.destinationName = mapDataModel.destinationName
+                
                 
                 try? context.save()
-                print("Alert 11B: Last saved date is \(String(describing: mapCoreData.lastUpdate)), saved origin is \(String(describing: mapCoreData.origins))")
+                print("Alert 11B: Last saved date is \(String(describing: mapCoreData.lastUpdate)), saved originName is \(String(describing: mapCoreData.originName))")
             }
             updateUIWithMapData()
         }
@@ -153,14 +160,14 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapDataModel.origins = (mapCoreData?.last?.origins)!
                 mapDataModel.destinations = (mapCoreData?.last?.destinations)!
                 mapDataModel.lastUpdateTimeData = (mapCoreData?.last?.lastUpdate)!
-                print("Alert 12: coreData Fetched, last update is \(mapDataModel.lastUpdateTimeData), origin is \(mapDataModel.origins)")
+                print("Alert 12: coreData Fetched, last update is \(mapDataModel.lastUpdateTimeData), originName is \(mapDataModel.originName)")
                 } else {
                     highwayDurationLabel.text = "Location Empty"
                     localDurationLabel.text = "Location Empty"
                 }
             }
         }
-        userEnteredNewAddress(originAddress: mapDataModel.origins, destinationAddress: mapDataModel.destinations)
+        userEnteredNewAddress(originAddress: mapDataModel.origins, originName: mapDataModel.originName, destinationAddress: mapDataModel.destinations, destinationName: mapDataModel.destinationName)
     }
     
   
@@ -173,16 +180,15 @@ class MapViewController: UIViewController, SetAddressDelegate {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         formatter.dateStyle = .short
-        
-        // get the date time String from the date object
+
         mapDataModel.lastUpdateTimeFormatted = formatter.string(from: mapDataModel.lastUpdateTimeData) // October 8, 2016 at 10:48:53 PM
-        
         highwayDurationLabel.text = String(describing: mapDataModel.highwayDuration)
         localDurationLabel.text = String(describing: mapDataModel.localDuration)
-        originLabel.text = "From: \(mapDataModel.origins)"
-        destinationLabel.text = "To: \(mapDataModel.destinations)"
+        originLabel.text = "From \(mapDataModel.originName) to \(mapDataModel.destinationName)"
+
         lastUpdateLabel.text = "Updated: \(mapDataModel.lastUpdateTimeFormatted)"
-       
+        viaHwyLabel.text = String(describing: mapDataModel.highwayVia)
+        viaLocalLabel.text = String(describing: mapDataModel.localVia)
     }
     
 

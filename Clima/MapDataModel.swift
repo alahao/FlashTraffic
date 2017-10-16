@@ -17,5 +17,9 @@ class MapDataModel {
     var destinations = ""
     var lastUpdateTimeData = Date()
     var lastUpdateTimeFormatted = ""
+    var highwayVia = ""
+    var localVia = ""
+    var originName = "Origin"
+    var destinationName = "Destination"
     
 }

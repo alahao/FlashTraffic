@@ -11,7 +11,7 @@ import CoreData
 
 //Write the protocol declaration here:
 protocol SetAddressDelegate {
-    func userEnteredNewAddress (originAddress: String, destinationAddress: String)
+    func userEnteredNewAddress (originAddress: String, originName: String, destinationAddress: String, destinationName: String)
 }
 
 class SetAddressViewController: UIViewController {
@@ -23,6 +23,9 @@ class SetAddressViewController: UIViewController {
 
     @IBOutlet weak var SetOriginAddressTextField: UITextField!
     @IBOutlet weak var SetDestinationTextField: UITextField!
+    @IBOutlet weak var setOriginNickNameTextField: UITextField!
+    @IBOutlet weak var setDestinationNickNameTextField: UITextField!
+    
     
     @IBAction func swapButton(_ sender: Any) {
         SetOriginAddressTextField.text! = SetDestinationTextField.placeholder!
@@ -40,6 +43,8 @@ class SetAddressViewController: UIViewController {
                 if mapCoreData?.last?.origins != nil {
                     SetOriginAddressTextField.placeholder = (mapCoreData?.last?.origins)!
                     SetDestinationTextField.placeholder = (mapCoreData?.last?.destinations)!
+                    setOriginNickNameTextField.placeholder = (mapCoreData?.last?.originName)!
+                    setDestinationNickNameTextField.placeholder = (mapCoreData?.last?.destinationName)!
                    }
                 }
             }
@@ -54,10 +59,11 @@ class SetAddressViewController: UIViewController {
         mapDataModel.destinations = SetDestinationTextField.text!
         mapDataModel.origins = SetOriginAddressTextField.text!
         
-       
-        print("Alert Set1: Set Destination Label is \(String(describing: mapDataModel.destinations))")
-        delegate?.userEnteredNewAddress(originAddress: originTextInput, destinationAddress: destinationTextInput)
         
+       
+        print("Alert Set1: Set DestinationName Label is \(String(describing: mapDataModel.destinationName))")
+        delegate?.userEnteredNewAddress(originAddress: originTextInput, originName: setOriginNickNameTextField.text!, destinationAddress: destinationTextInput, destinationName: setDestinationNickNameTextField.text!)
+   
         self.dismiss(animated: true, completion: nil)
         }
     
