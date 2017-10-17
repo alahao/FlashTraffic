@@ -28,31 +28,48 @@ class SetAddressViewController: UIViewController {
     
     
     @IBAction func swapButton(_ sender: Any) {
-        SetOriginAddressTextField.text! = SetDestinationTextField.placeholder!
-        SetDestinationTextField.text! = SetOriginAddressTextField.placeholder!
+        print("ALERT SET3 mapDataModel.originName is \(mapDataModel.originName)")
+        SetOriginAddressTextField.text! = mapDataModel.destinations
+        SetDestinationTextField.text! = mapDataModel.origins
+        setOriginNickNameTextField.text! = mapDataModel.destinationName
+        setDestinationNickNameTextField.text! = mapDataModel.originName
         
-        mapDataModel.origins = SetDestinationTextField.text!
-        mapDataModel.destinations = SetOriginAddressTextField.text!
+        mapDataModel.origins = SetOriginAddressTextField.text!
+        mapDataModel.destinations = SetDestinationTextField.text!
+        mapDataModel.originName = setOriginNickNameTextField.text!
+        mapDataModel.destinationName = setDestinationNickNameTextField.text!
     }
     
+    //View Did Load, fetch Core Data, display last saved info. 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        print("ALERT SET4 mapDataModel.originName is \(mapDataModel.originName)")
         if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
             if let mapCoreData = try? context.fetch(LocationCoreData.fetchRequest()) as? [LocationCoreData] {
                 if mapCoreData?.last?.origins != nil {
-                    SetOriginAddressTextField.placeholder = (mapCoreData?.last?.origins)!
-                    SetDestinationTextField.placeholder = (mapCoreData?.last?.destinations)!
-                    setOriginNickNameTextField.placeholder = (mapCoreData?.last?.originName)!
-                    setDestinationNickNameTextField.placeholder = (mapCoreData?.last?.destinationName)!
+                    SetOriginAddressTextField.text = (mapCoreData?.last?.origins)!
+                    SetDestinationTextField.text = (mapCoreData?.last?.destinations)!
+                    setOriginNickNameTextField.text = (mapCoreData?.last?.originName)!
+                    setDestinationNickNameTextField.text = (mapCoreData?.last?.destinationName)!
+                    
+                    mapDataModel.origins = (mapCoreData?.last?.origins)!
+                    mapDataModel.destinations = (mapCoreData?.last?.destinations)!
+                    mapDataModel.originName = (mapCoreData?.last?.originName)!
+                    mapDataModel.destinationName = (mapCoreData?.last?.destinationName)!
+                    
                    }
                 }
             }
+        print("ALERT SET5 mapDataModel.originName is \(mapDataModel.originName)")
         }
     
     //This is the IBAction that gets called when the user taps on the "Get gMap" button:
     @IBAction func setAddressPressed(_ sender: AnyObject) {
         
+//        SetOriginAddressTextField.text! = SetOriginAddressTextField.placeholder!
+//        SetDestinationTextField.text! = SetDestinationTextField.placeholder!
+//        setOriginNickNameTextField.text! = setOriginNickNameTextField.placeholder!
+//        setDestinationNickNameTextField.text! = setDestinationNickNameTextField.placeholder!
         let originTextInput = SetOriginAddressTextField.text!
         let destinationTextInput = SetDestinationTextField.text!
         
