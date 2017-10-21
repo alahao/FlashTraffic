@@ -16,7 +16,29 @@ class MapViewController: UIViewController, SetAddressDelegate {
     var highwayParams : [String: String] = [:] //Dictionary
     var localParams : [String: String] = [:]   //Dictionary
     let when = DispatchTime.now() + 1
+    let refreshControl = UIRefreshControl()
 
+    // Configure Refresh Control
+   
+    
+    @objc private func refreshWeatherData(_ sender: Any) {
+        // Fetch Weather Data
+        localDurationLabel.text = "Loading..."
+        highwayDurationLabel.text = "Loading..."
+        DispatchQueue.main.asyncAfter(deadline: when) {
+            // Your code with delay
+            self.fetchCoreData()
+    }
+    }
+    
+//    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+//        return 1
+//    }
+//
+//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        cell = tableView.dequeueReusableCell(withIdentifier: "cell")
+//        return cell
+//    }
     
     // Data Model and Core Data Model
     var mapDataModel = MapDataModel() //Created mapDataModel object using MapDataModel class
@@ -30,6 +52,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
     @IBOutlet weak var viaHwyLabel: UILabel!
     @IBOutlet weak var viaLocalLabel: UILabel!
     @IBOutlet weak var SetLocationButton: UIButton!
+    @IBOutlet weak var tableView: UITableView!
+    
     
     
 // MARK: - Refresh Method
@@ -46,6 +70,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
         print("Alert 1: Refresh Button Pressed")
     }
     
+
     // 2. Refresh on Wake
     func applicationDidBecomeActive(_ application: UIApplication) {
         fetchCoreData()
@@ -55,11 +80,14 @@ class MapViewController: UIViewController, SetAddressDelegate {
     // 3. Refresh on View Loaded
     override func viewDidLoad() {
         super.viewDidLoad()
+//        tableView.dataSource = self
+        refreshControl.addTarget(self, action: #selector(refreshWeatherData(_:)), for: .valueChanged)
         fetchCoreData()
         print("Alert 3: Refresh on View Loaded")
         print("ALERT 13 mapDataModel.originName is \(mapDataModel.originName)")
     }
     
+   
     
 // MARK: - Change City Delegate methods
 /***************************************************************/
@@ -74,6 +102,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
     }
 
     
+
     
 // MARK: - Networking
 /***************************************************************/
@@ -91,7 +120,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
 
             } else {
                 print("Alert 5: Error \(String(describing: response.result.error))")
-                self.highwayDurationLabel.text = "Connection Issues"
+                self.lastUpdateLabel.text = "Connection Issues"
             }
         }
         
@@ -107,7 +136,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 
             } else {
                 print("Alert 7: Error \(String(describing: response.result.error))")
-                self.localDurationLabel.text = "Connection Issues"
+                self.lastUpdateLabel.text = "Connection Issues"
             }
         }
         
