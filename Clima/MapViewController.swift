@@ -15,7 +15,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
     let APP_KEY = "AIzaSyDeW72YFPFM9l9FI8amIEqRlr2XdOktm-M"
     var highwayParams : [String: String] = [:] //Dictionary
     var localParams : [String: String] = [:]   //Dictionary
-    let when = DispatchTime.now() + 1
+    
     let refreshControl = UIRefreshControl()
 
     // Configure Refresh Control
@@ -25,20 +25,13 @@ class MapViewController: UIViewController, SetAddressDelegate {
         // Fetch Weather Data
         localDurationLabel.text = "Loading..."
         highwayDurationLabel.text = "Loading..."
-        DispatchQueue.main.asyncAfter(deadline: when) {
-            // Your code with delay
-            self.fetchCoreData()
-    }
+
+             self.fetchCoreData()
+    
+       
     }
     
-//    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return 1
-//    }
-//
-//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        cell = tableView.dequeueReusableCell(withIdentifier: "cell")
-//        return cell
-//    }
+
     
     // Data Model and Core Data Model
     var mapDataModel = MapDataModel() //Created mapDataModel object using MapDataModel class
@@ -62,10 +55,12 @@ class MapViewController: UIViewController, SetAddressDelegate {
     @IBAction func refreshPressed(_ sender: Any) {
         localDurationLabel.text = "Loading..."
         highwayDurationLabel.text = "Loading..."
-        DispatchQueue.main.asyncAfter(deadline: when) {
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             // Your code with delay
             self.fetchCoreData()
         }
+       
         
         print("Alert 1: Refresh Button Pressed")
     }
@@ -94,7 +89,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
     // Locations from page 2
     func userEnteredNewAddress(originAddress: String, originName: String, destinationAddress: String, destinationName: String) {
         highwayParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "key" : APP_KEY]
-        localParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "avoid" : "highways", "key" : APP_KEY]
+        localParams = ["origin" : originAddress, "destination" : destinationAddress, "departure_time" : "now", "alternatives" : "true", "key" : APP_KEY]
         mapDataModel.originName = originName
         mapDataModel.destinationName = destinationName
         
@@ -153,7 +148,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
             } else { highwayDurationLabel.text = "Data Unavailable" }
             updateUIWithMapData()
         }
-        
+    
         // 9 - 10. Translate JSON to LOCAL duration.
         func updateLocalMapData(localJSON : JSON) {
             if let localDurationResult = localJSON["routes"][0]["legs"][0]["duration_in_traffic"]["text"].string {
@@ -165,6 +160,11 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 print("Alert 10: LocalDurationResult is \(localDurationResult)")
             } else { localDurationLabel.text = "Data Unavailable" }
             
+            if let route2DurationResult = localJSON["routes"][1]["legs"][0]["duration_in_traffic"]["text"].string {
+                mapDataModel.highwayDuration = route2DurationResult
+                mapDataModel.highwayVia = localJSON["routes"][1]["summary"].stringValue
+                print("Alert 8: HighwayDurationResult is \(route2DurationResult)")
+            } else { highwayDurationLabel.text = "Data Unavailable" }
             
 //** SAVE CORE DATA ** 11. with Locations and Time
             if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
@@ -177,12 +177,13 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapCoreData.destinationName = mapDataModel.destinationName
                 
                 try? context.save()
+                
                 print("Alert 11B: Last saved date is \(String(describing: mapCoreData.lastUpdate)), saved originName in COREDATA is \(String(describing: mapCoreData.originName)), model originName is \(mapDataModel.originName)")
+            
+                updateUIWithMapData()
+                }
+        
             }
-            updateUIWithMapData()
-        }
-        
-        
     
     
 
@@ -196,7 +197,7 @@ class MapViewController: UIViewController, SetAddressDelegate {
                 mapDataModel.destinations = (mapCoreData?.last?.destinations)!
                     mapDataModel.destinationName = (mapCoreData?.last?.destinationName)!
                 mapDataModel.lastUpdateTimeData = (mapCoreData?.last?.lastUpdate)!
-                print("Alert 12: coreData Fetched, last update is \(mapDataModel.lastUpdateTimeData), CoreDataoriginName is \(mapCoreData?.last?.originName)")
+              
                 } else {
                     highwayDurationLabel.text = "Location Empty"
                     localDurationLabel.text = "Location Empty"
@@ -221,8 +222,8 @@ class MapViewController: UIViewController, SetAddressDelegate {
         SetLocationButton.setTitle("From \(mapDataModel.originName) to \(mapDataModel.destinationName)", for: .normal)
 
         lastUpdateLabel.text = "Updated: \(mapDataModel.lastUpdateTimeFormatted)"
-        viaHwyLabel.text = String(describing: mapDataModel.highwayVia)
-        viaLocalLabel.text = String(describing: mapDataModel.localVia)
+        viaHwyLabel.text = "Via \(mapDataModel.highwayVia)"
+        viaLocalLabel.text = "Via \(mapDataModel.localVia)"
     }
     
 
